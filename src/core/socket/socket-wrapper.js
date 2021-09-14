@@ -1,6 +1,7 @@
 import { isEmpty, isFunction } from 'lodash'
 import store from '@/store'
 import { getToken } from '../../utils/auth'
+import mitt from 'mitt'
 
 /**
  * Socket连接状态
@@ -15,59 +16,30 @@ export const SocketStatus = {
 }
 
 export class SocketWrapper {
-  /**
-   * socket event keywords
-   * @type {string[]}
-   */
-  static staticEvents = [
-    // socket instance listen
-    'connect',
-    'connect_error',
-    'disconnect',
-    'disconnecting',
-    'newListener',
-    'removeListener',
-    // Manager listen
-    'error',
-    'reconnect',
-    'reconnect_attempt',
-    'reconnect_error',
-    'reconnect_failed',
-    'ping',
-    'pong'
-  ]
-
   constructor() {
     // socket io client instance
     this.socketInstance = null
-    this.handleIndex = 0
-    this.flushing = false
-    this.waiting = false
     // is server disconnect
     this.closeByServer = false
+    // event emitter
+    this.emitter = mitt()
     // init
     this._init()
-  }
-
-  /**
-   * 获取当前连接的clientid
-   */
-  getClientId() {
-    if (this.socketInstance) {
-      return this.socketInstance.id
-    }
-    return undefined
   }
 
   /**
    * 获取真实的Socket连接状态
    */
   isConnected() {
+    if (this.socketInstance) {
+      // https://developer.mozilla.org/zh-CN/docs/Web/API/WebSocket/readyState
+      return this.socketInstance.readyState === WebSocket.OPEN
+    }
     return false
   }
 
   /**
-   * 主动关闭连接
+   * 客户端主动关闭连接
    */
   close() {
     if (this.socketInstance) {
@@ -77,7 +49,7 @@ export class SocketWrapper {
   }
 
   /**
-   * SocketIO 初始化
+   * Socket 初始化
    */
   _init() {
     if (this.socketInstance) {
@@ -92,7 +64,27 @@ export class SocketWrapper {
     }
     this.changeStatus(SocketStatus.CONNECTING)
     // 初始化SocketIO实例
-    this.socketInstance = new WebSocket()
+    this.socketInstance = new WebSocket(
+      `ws://${location.host}${process.env.VUE_APP_BASE_SOCKET_PATH}`,
+      [token]
+    )
+    // 注册事件
+    this.socketInstance.addEventListener(
+      'open',
+      this.handleOpenEvent.bind(this)
+    )
+    this.socketInstance.addEventListener(
+      'close',
+      this.handleCloseEvent.bind(this)
+    )
+    this.socketInstance.addEventListener(
+      'message',
+      this.handleMessageEvent.bind(this)
+    )
+    this.socketInstance.addEventListener(
+      'error',
+      this.handleErrorEvent.bind(this)
+    )
   }
 
   /**
@@ -103,7 +95,7 @@ export class SocketWrapper {
       throw new TypeError('param must correct type')
     }
     // register
-    this.socketInstance.on(eventName, fn)
+    this.emitter.on(eventName, fn)
   }
 
   /**
@@ -111,12 +103,12 @@ export class SocketWrapper {
    */
   unsubscribe(eventName, fn) {
     if (isEmpty(eventName)) {
-      throw new TypeError('param must correct type')
+      // 如果event为空则清除所有注册的事件
+      this.emitter.all.clear()
+      return
     }
-    if (SocketWrapper.staticEvents.includes(eventName) && !isFunction(fn)) {
-      throw new Error('default event remove must has second param')
-    }
-    this.socketInstance.off(eventName, fn)
+    // 如果fn为空则会清除所有已经关联的注册事件
+    this.emitter.off(eventName, fn)
   }
 
   /**
@@ -127,46 +119,33 @@ export class SocketWrapper {
   }
 
   /**
-   * 默认事件处理
+   * 当一个 WebSocket 连接成功时触发
    */
-  handleConnectEvent() {
+  handleOpenEvent() {
     this.changeStatus(SocketStatus.CONNECTED)
-    // flush queue
-    if (this.emitQueue.length > 0) {
-      // copy
-      const queue = this.emitQueue.slice()
-      // clean
-      this.emitQueue = []
-      for (let i = 0; i < queue.length; i++) {
-        this.queueEmit(queue[i])
-      }
-    }
   }
 
   /**
-   * 默认事件处理
+   * 当通过 WebSocket 收到数据时触发
+   * @param {*} e event
    */
-  handleReconnectAttemptEvent() {
-    this.changeStatus(SocketStatus.CONNECTING)
+  handleMessageEvent(e) {
+    const { event, data } = e.data
+    this.emitter.emit(event, data)
   }
 
   /**
-   * 默认事件处理
+   * 当一个 WebSocket 连接被关闭时触发
    */
-  handleDisconnectEvent(reason) {
-    if (reason === 'io server disconnect') {
-      this.closeByServer = true
-      this.changeStatus(SocketStatus.CLOSE)
-    }
+  handleCloseEvent() {
+    this.changeStatus(SocketStatus.CLOSE)
   }
 
   /**
-   * 默认事件处理
+   * 当一个 WebSocket 连接因错误而关闭时触发，例如无法发送数据时
    */
   handleErrorEvent() {
-    if (this.closeByServer) {
-      this.changeStatus(SocketStatus.CLOSE)
-    }
+    this.changeStatus(SocketStatus.CLOSE)
   }
 
   /**
@@ -178,11 +157,15 @@ export class SocketWrapper {
    */
   emit(eventName, data) {
     // 检查event名称
-    if (isEmpty(eventName) || SocketWrapper.staticEvents.includes(eventName)) {
+    if (isEmpty(eventName)) {
       throw new TypeError('event is not allow emit')
     }
+    // send
     if (this.isConnected()) {
-      this.socketInstance.emit(eventName, data)
+      this.socketInstance.send({
+        event: eventName,
+        data
+      })
     }
   }
 }

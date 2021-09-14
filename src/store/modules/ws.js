@@ -25,7 +25,7 @@ const actions = {
   // 初始化Socket
   initSocket({ commit, state, dispatch }) {
     // check is init
-    if (state.client && state.client.isConnected()) {
+    if (state.client) {
       return
     }
     const ws = new SocketWrapper()
