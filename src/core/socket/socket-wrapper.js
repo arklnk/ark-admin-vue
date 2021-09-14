@@ -16,7 +16,7 @@ export const SocketStatus = {
 
 export class SocketWrapper {
   /**
-   * socket.io-client reserved event keywords
+   * socket event keywords
    * @type {string[]}
    */
   static staticEvents = [
@@ -63,7 +63,7 @@ export class SocketWrapper {
    * 获取真实的Socket连接状态
    */
   isConnected() {
-    return this.socketInstance.connected
+    return false
   }
 
   /**
@@ -80,7 +80,7 @@ export class SocketWrapper {
    * SocketIO 初始化
    */
   _init() {
-    if (this.socketInstance && this.socketInstance.connected) {
+    if (this.socketInstance) {
       throw new Error('socket is connecting')
     }
     // auth token
@@ -93,12 +93,6 @@ export class SocketWrapper {
     this.changeStatus(SocketStatus.CONNECTING)
     // 初始化SocketIO实例
     this.socketInstance = new WebSocket()
-    // register default event
-    this.socketInstance.on(SocketWrapper.staticEvents[0], this.handleConnectEvent.bind(this))
-    this.socketInstance.on(SocketWrapper.staticEvents[1], this.handleErrorEvent.bind(this))
-    this.socketInstance.on(SocketWrapper.staticEvents[2], this.handleDisconnectEvent.bind(this))
-    // reconnecting
-    this.socketInstance.io.on(SocketWrapper.staticEvents[8], this.handleReconnectAttemptEvent.bind(this))
   }
 
   /**
