@@ -1,5 +1,4 @@
 import { isEmpty, isFunction } from 'lodash'
-import IO from 'socket.io-client'
 import store from '@/store'
 import { getToken } from '../../utils/auth'
 
@@ -15,7 +14,7 @@ export const SocketStatus = {
   CLOSE: 'CLOSE'
 }
 
-export class SocketIOWrapper {
+export class SocketWrapper {
   /**
    * socket.io-client reserved event keywords
    * @type {string[]}
@@ -41,10 +40,6 @@ export class SocketIOWrapper {
   constructor() {
     // socket io client instance
     this.socketInstance = null
-    // emit cache queue
-    this.emitQueue = []
-    // flush will using
-    this.runningQueue = []
     this.handleIndex = 0
     this.flushing = false
     this.waiting = false
@@ -97,17 +92,13 @@ export class SocketIOWrapper {
     }
     this.changeStatus(SocketStatus.CONNECTING)
     // 初始化SocketIO实例
-    this.socketInstance = IO(process.env.VUE_APP_BASE_SOCKET_NSP, {
-      path: process.env.VUE_APP_BASE_SOCKET_PATH,
-      transports: ['websocket'],
-      query: { token }
-    })
+    this.socketInstance = new WebSocket()
     // register default event
-    this.socketInstance.on(SocketIOWrapper.staticEvents[0], this.handleConnectEvent.bind(this))
-    this.socketInstance.on(SocketIOWrapper.staticEvents[1], this.handleErrorEvent.bind(this))
-    this.socketInstance.on(SocketIOWrapper.staticEvents[2], this.handleDisconnectEvent.bind(this))
+    this.socketInstance.on(SocketWrapper.staticEvents[0], this.handleConnectEvent.bind(this))
+    this.socketInstance.on(SocketWrapper.staticEvents[1], this.handleErrorEvent.bind(this))
+    this.socketInstance.on(SocketWrapper.staticEvents[2], this.handleDisconnectEvent.bind(this))
     // reconnecting
-    this.socketInstance.io.on(SocketIOWrapper.staticEvents[8], this.handleReconnectAttemptEvent.bind(this))
+    this.socketInstance.io.on(SocketWrapper.staticEvents[8], this.handleReconnectAttemptEvent.bind(this))
   }
 
   /**
@@ -128,7 +119,7 @@ export class SocketIOWrapper {
     if (isEmpty(eventName)) {
       throw new TypeError('param must correct type')
     }
-    if (SocketIOWrapper.staticEvents.includes(eventName) && !isFunction(fn)) {
+    if (SocketWrapper.staticEvents.includes(eventName) && !isFunction(fn)) {
       throw new Error('default event remove must has second param')
     }
     this.socketInstance.off(eventName, fn)
@@ -193,59 +184,11 @@ export class SocketIOWrapper {
    */
   emit(eventName, data) {
     // 检查event名称
-    if (isEmpty(eventName) || SocketIOWrapper.staticEvents.includes(eventName)) {
+    if (isEmpty(eventName) || SocketWrapper.staticEvents.includes(eventName)) {
       throw new TypeError('event is not allow emit')
     }
-    if (!this.isConnected()) {
-      // 未连接状态，则缓存，在重新连接时则会执行该队列
-      this.emitQueue.push({ eventName, data })
-    } else {
-      // 连接成功状态
+    if (this.isConnected()) {
       this.socketInstance.emit(eventName, data)
     }
-  }
-
-  /**
-   * 重置队列标志状态
-   */
-  resetState() {
-    this.handleIndex = 0
-    this.runningQueue = []
-    this.waiting = this.flushing = false
-  }
-
-  queueEmit(item) {
-    if (!this.flushing) {
-      this.runningQueue.push(item)
-    } else {
-      // if flushing
-      let i = this.runningQueue.length - 1
-      while (i > this.handleIndex) {
-        i--
-      }
-      this.runningQueue.splice(i + 1, 0, item)
-    }
-    // queue the flush
-    if (!this.waiting) {
-      this.waiting = true
-      setTimeout(this.flushQueue.bind(this), 0)
-    }
-  }
-
-  flushQueue() {
-    this.flushing = true
-    let item
-    // emit
-    for (
-      this.handleIndex = 0;
-      this.handleIndex < this.runningQueue.length;
-      this.handleIndex++
-    ) {
-      item = this.runningQueue[this.handleIndex]
-      // re emit
-      this.emit(item.eventName, item.data)
-    }
-
-    this.resetState()
   }
 }

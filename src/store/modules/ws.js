@@ -1,5 +1,5 @@
 import { EVENT_KICK } from '@/core/socket/event-type'
-import { SocketIOWrapper, SocketStatus } from '@/core/socket/socket-io'
+import { SocketWrapper, SocketStatus } from '@/core/socket/socket-wrapper'
 import { MessageBox } from 'element-ui'
 
 const state = {
@@ -28,7 +28,7 @@ const actions = {
     if (state.client && state.client.isConnected()) {
       return
     }
-    const ws = new SocketIOWrapper()
+    const ws = new SocketWrapper()
     ws.subscribe(EVENT_KICK, async(data) => {
       // reset token
       await dispatch('user/resetToken', null, { root: true })

@@ -14,7 +14,7 @@
 </template>
 
 <script>
-import { SocketStatus } from '@/core/socket/socket-io'
+import { SocketStatus } from '@/core/socket/socket-wrapper'
 export default {
   name: 'SocketStatus',
   props: {
