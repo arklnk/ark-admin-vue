@@ -83,7 +83,7 @@
           align="center"
         />
         <el-table-column
-          prop="updateTime"
+          prop="updateAt"
           label="更新时间"
           width="180"
           align="center"
