@@ -1,7 +1,7 @@
 {
-  "name": "sf-vue-admin",
-  "version": "2.1.1",
-  "description": "simple and efficient authority management system with separation of front and backends",
+  "name": "ark-admin-vue",
+  "version": "0.0.1",
+  "description": "Hyperf-Admin通用性管理后台",
   "author": "hackycy",
   "private": true,
   "license": "MIT",
