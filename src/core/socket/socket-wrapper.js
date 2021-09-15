@@ -21,10 +21,12 @@ export class SocketWrapper {
     this.socketInstance = null
     // is server disconnect
     this.closeByServer = false
+    // 心跳间隔
+    this.heartbeatInterval = 10000
     // event emitter
     this.emitter = mitt()
     // init
-    this._init()
+    this._initSocket()
   }
 
   /**
@@ -51,9 +53,9 @@ export class SocketWrapper {
   /**
    * Socket 初始化
    */
-  _init() {
-    if (this.socketInstance) {
-      throw new Error('socket is connecting')
+  _initSocket() {
+    if (this.socketInstance && this.isConnected()) {
+      return
     }
     // auth token
     const token = getToken()
@@ -85,6 +87,28 @@ export class SocketWrapper {
       'error',
       this.handleErrorEvent.bind(this)
     )
+  }
+
+  /**
+   * 心跳检测
+   */
+  _initHeartbeatDetection() {
+    // 已存在ID先清除
+    if (this.heartbeatTimerID) {
+      clearInterval(this.heartbeatTimerID)
+    }
+    this.heartbeatTimerID = setInterval(() => {
+      if (this.socketInstance.readyState === WebSocket.OPEN) {
+        // send ping event
+        this.emit('ping')
+      } else if (
+        this.socketInstance.readyState === WebSocket.CLOSING ||
+        this.socketInstance.readyState === WebSocket.CLOSED
+      ) {
+        // 尝试重连
+        this._initSocket()
+      }
+    }, this.heartbeatInterval)
   }
 
   /**
@@ -123,6 +147,8 @@ export class SocketWrapper {
    */
   handleOpenEvent() {
     this.changeStatus(SocketStatus.CONNECTED)
+    // 连接成功后初始化心跳检测
+    this._initHeartbeatDetection()
   }
 
   /**
@@ -131,6 +157,10 @@ export class SocketWrapper {
    */
   handleMessageEvent(e) {
     const { event, data } = e.data
+    if (event === 'ping' || event === 'pong') {
+      // 忽略 ping pong类型事件处理
+      return
+    }
     this.emitter.emit(event, data)
   }
 
