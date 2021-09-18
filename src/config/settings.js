@@ -1,6 +1,6 @@
 module.exports = {
 
-  title: 'SF管理后台',
+  title: 'Hyperf-Admin管理后台',
 
   dashboardName: '工作台',
 
