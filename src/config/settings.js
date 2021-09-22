@@ -1,6 +1,6 @@
 module.exports = {
 
-  title: 'Hyperf-Admin管理后台',
+  title: 'ark-admin通用管理后台',
 
   dashboardName: '工作台',
 
