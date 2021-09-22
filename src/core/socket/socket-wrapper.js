@@ -21,8 +21,13 @@ export class SocketWrapper {
     this.socketInstance = null
     // is server disconnect
     this.closeByServer = false
-    // 心跳间隔
+    // 心跳ping间隔
     this.heartbeatInterval = 10000
+    // 心跳pong检测超时间隔
+    this.pongInterval = 30000
+    // 上一次发送心跳的毫秒数
+    this.lastPingTime = 0
+    this.lastPongTime = 0
     // event emitter
     this.emitter = mitt()
     // init
@@ -97,16 +102,13 @@ export class SocketWrapper {
     if (this.heartbeatTimerID) {
       clearInterval(this.heartbeatTimerID)
     }
+    // 心跳保活，定时发送ping事件
     this.heartbeatTimerID = setInterval(() => {
       if (this.socketInstance.readyState === WebSocket.OPEN) {
         // send ping event
         this.emit('ping')
-      } else if (
-        this.socketInstance.readyState === WebSocket.CLOSING ||
-        this.socketInstance.readyState === WebSocket.CLOSED
-      ) {
-        // 尝试重连
-        this._initSocket()
+        // 记录当前ping
+        this.lastPingTime = new Date().getTime()
       }
     }, this.heartbeatInterval)
   }
@@ -156,9 +158,10 @@ export class SocketWrapper {
    * @param {*} e event
    */
   handleMessageEvent(e) {
-    const { event, data } = e.data
-    if (event === 'ping' || event === 'pong') {
-      // 忽略 ping pong类型事件处理
+    const { event, data } = JSON.parse(e.data)
+    if (event === 'pong') {
+      // 记录最后一次pong的时间
+      this.lastPongTime = new Date().getTime()
       return
     }
     this.emitter.emit(event, data)
@@ -192,10 +195,10 @@ export class SocketWrapper {
     }
     // send
     if (this.isConnected()) {
-      this.socketInstance.send({
+      this.socketInstance.send(JSON.stringify({
         event: eventName,
         data
-      })
+      }))
     }
   }
 }
