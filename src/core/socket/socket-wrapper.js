@@ -185,6 +185,7 @@ export class SocketWrapper {
       clearTimeout(this.pongTimeoutID)
       // 并重新发送一次心跳
       this.startHeartbeatDetection()
+      return
     } else if (event === 'close') {
       // 服务端主动关闭时，则设置，并不再主动重连
       this.closeByServer = true
