@@ -131,7 +131,7 @@ export class SocketWrapper {
         // 如果超过该时间延时器并未清空时，则代表pong消息发送超时，则主动开始尝试重连
         this.socketInstance.close()
       }, this.pongTimeout)
-    }, this.heartbeatInterval)
+    }, this.pingTimeout)
   }
 
   /**
