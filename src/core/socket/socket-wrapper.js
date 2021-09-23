@@ -22,12 +22,14 @@ export class SocketWrapper {
     // is server disconnect
     this.closeByServer = false
     // 心跳ping间隔
-    this.heartbeatInterval = 10000
+    this.reconnectInterval = 5000
     // 心跳pong检测超时间隔
-    this.pongInterval = 30000
-    // 上一次发送心跳的毫秒数
-    this.lastPingTime = 0
-    this.lastPongTime = 0
+    this.pongTimeout = 20000
+    this.pingTimeout = 15000
+    // 标志位，防止WebSocket重复初始化
+    this.lockReconnect = false
+    this.pongTimeoutID = null
+    this.pingTimeoutID = null
     // event emitter
     this.emitter = mitt()
     // init
@@ -95,21 +97,40 @@ export class SocketWrapper {
   }
 
   /**
-   * 心跳检测
+   * 尝试重连
    */
-  _initHeartbeatDetection() {
-    // 已存在ID先清除
-    if (this.heartbeatTimerID) {
-      clearInterval(this.heartbeatTimerID)
+  tryReconnect() {
+    if (this.closeByServer || this.lockReconnect) {
+      return
     }
-    // 心跳保活，定时发送ping事件
-    this.heartbeatTimerID = setInterval(() => {
+    this.lockReconnect = true
+    // 延迟执行，避免不断重复
+    setTimeout(() => {
+      this._initSocket()
+      this.lockReconnect = false
+    }, this.reconnectInterval)
+  }
+
+  /**
+   * 发送一次心跳检测 (ping)
+   */
+  startHeartbeatDetection() {
+    // 确保重置之前的任务
+    clearTimeout(this.pingTimeoutID)
+    clearTimeout(this.pongTimeoutID)
+    // 如果服务端主动关闭，则不再启动心跳
+    if (this.closeByServer) {
+      return
+    }
+    this.pingTimeoutID = setTimeout(() => {
       if (this.socketInstance.readyState === WebSocket.OPEN) {
         // send ping event
         this.emit('ping')
-        // 记录当前ping
-        this.lastPingTime = new Date().getTime()
       }
+      this.pongTimeoutID = setTimeout(() => {
+        // 如果超过该时间延时器并未清空时，则代表pong消息发送超时，则主动开始尝试重连
+        this.socketInstance.close()
+      }, this.pongTimeout)
     }, this.heartbeatInterval)
   }
 
@@ -150,7 +171,7 @@ export class SocketWrapper {
   handleOpenEvent() {
     this.changeStatus(SocketStatus.CONNECTED)
     // 连接成功后初始化心跳检测
-    this._initHeartbeatDetection()
+    this.startHeartbeatDetection()
   }
 
   /**
@@ -160,9 +181,13 @@ export class SocketWrapper {
   handleMessageEvent(e) {
     const { event, data } = JSON.parse(e.data)
     if (event === 'pong') {
-      // 记录最后一次pong的时间
-      this.lastPongTime = new Date().getTime()
-      return
+      // 收到pong消息则清掉该延时任务
+      clearTimeout(this.pongTimeoutID)
+      // 并重新发送一次心跳
+      this.startHeartbeatDetection()
+    } else if (event === 'close') {
+      // 服务端主动关闭时，则设置，并不再主动重连
+      this.closeByServer = true
     }
     this.emitter.emit(event, data)
   }
@@ -172,13 +197,14 @@ export class SocketWrapper {
    */
   handleCloseEvent() {
     this.changeStatus(SocketStatus.CLOSE)
+    this.tryReconnect()
   }
 
   /**
    * 当一个 WebSocket 连接因错误而关闭时触发，例如无法发送数据时
    */
   handleErrorEvent() {
-    this.changeStatus(SocketStatus.CLOSE)
+    // error
   }
 
   /**
