@@ -35,7 +35,7 @@ const actions = {
       // reset token
       await dispatch('user/resetToken', null, { root: true })
       // 关闭socket连接
-      commit('closeSocket')
+      dispatch('ws/closeSocket')
       // 消息提示，并刷新页面
       MessageBox.confirm(`您已被管理员踢下线！`, '警告', {
         confirmButtonText: '重新登录',
