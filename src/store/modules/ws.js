@@ -31,10 +31,10 @@ const actions = {
     // 初始化ws
     const ws = new SocketWrapper()
     // 全局注册kick事件
-    ws.subscribe(EVENT_KICK, async(data) => {
+    ws.subscribe(EVENT_KICK, async() => {
       // reset token
       await dispatch('user/resetToken', null, { root: true })
-      MessageBox.confirm(`您已被管理员${data.operater}踢下线！`, '警告', {
+      MessageBox.confirm(`您已被管理员踢下线！`, '警告', {
         confirmButtonText: '重新登录',
         cancelButtonText: '取消',
         type: 'warning'
