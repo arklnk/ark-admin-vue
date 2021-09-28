@@ -1,6 +1,6 @@
-// import { EVENT_KICK } from '@/core/socket/event-type'
+import { EVENT_KICK } from '@/core/socket/event-type'
 import { SocketWrapper, SocketStatus } from '@/core/socket/socket-wrapper'
-// import { MessageBox } from 'element-ui'
+import { MessageBox } from 'element-ui'
 
 const state = {
   // socket wrapper 实例
@@ -28,19 +28,21 @@ const actions = {
     if (state.client) {
       return
     }
+    // 初始化ws
     const ws = new SocketWrapper()
-    // ws.subscribe(EVENT_KICK, async(data) => {
-    //   // reset token
-    //   await dispatch('user/resetToken', null, { root: true })
-    //   MessageBox.confirm(`您已被管理员${data.operater}踢下线！`, '警告', {
-    //     confirmButtonText: '重新登录',
-    //     cancelButtonText: '取消',
-    //     type: 'warning'
-    //   }).finally(() => {
-    //     // 刷新页面
-    //     window.location.reload()
-    //   })
-    // })
+    // 全局注册kick事件
+    ws.subscribe(EVENT_KICK, async(data) => {
+      // reset token
+      await dispatch('user/resetToken', null, { root: true })
+      MessageBox.confirm(`您已被管理员${data.operater}踢下线！`, '警告', {
+        confirmButtonText: '重新登录',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).finally(() => {
+        // 刷新页面
+        window.location.reload()
+      })
+    })
     commit('SET_CLIENT', ws)
   },
 
