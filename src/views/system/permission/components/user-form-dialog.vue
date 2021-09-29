@@ -177,6 +177,10 @@ export default {
               name: 'el-input',
               attrs: {
                 placeholder: '请输入用户名'
+              },
+              props: {
+                // 编辑状态不可再变更
+                disabled: this.updateId !== -1
               }
             }
           },
