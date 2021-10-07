@@ -22,6 +22,15 @@
               <el-form-item label="任务编号">
                 <span># {{ props.row.id }}</span>
               </el-form-item>
+              <el-form-item label="是否单例">
+                <span>{{ props.row.singleton ? '是' : '否' }}</span>
+              </el-form-item>
+              <el-form-item label="是否单节点">
+                <span>{{ props.row.onOneServer ? '是' : '否' }}</span>
+              </el-form-item>
+              <el-form-item label="执行节点">
+                <span>{{ props.row.nodeName }}</span>
+              </el-form-item>
               <el-form-item label="Cron表达式">
                 <el-tooltip content="秒 分 小时 日期 月份 星期 年(可选)">
                   <span>{{ props.row.rule }}</span>
@@ -66,7 +75,7 @@
           </template>
         </el-table-column>
         <el-table-column
-          prop="name"
+          prop="title"
           show-overflow-tooltip
           label="任务名称"
           align="center"
@@ -86,14 +95,14 @@
           </template>
         </el-table-column>
         <el-table-column
-          prop="service"
+          prop="execute"
           show-overflow-tooltip
           label="调用服务"
           width="350"
           align="center"
         />
         <el-table-column
-          prop="data"
+          prop="params"
           show-overflow-tooltip
           label="执行参数"
           width="450"
