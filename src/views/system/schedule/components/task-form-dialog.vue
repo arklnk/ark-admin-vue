@@ -155,7 +155,8 @@ export default {
             component: {
               name: 'el-date-picker',
               props: {
-                type: 'datetime'
+                type: 'datetime',
+                valueFormat: 'yyyy-MM-dd HH:mm:ss'
               },
               style: {
                 width: '100%'
@@ -172,7 +173,8 @@ export default {
             component: {
               name: 'el-date-picker',
               props: {
-                type: 'datetime'
+                type: 'datetime',
+                valueFormat: 'yyyy-MM-dd HH:mm:ss'
               },
               style: {
                 width: '100%'
