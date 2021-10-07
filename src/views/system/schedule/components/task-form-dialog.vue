@@ -91,7 +91,7 @@ export default {
         items: [
           {
             label: '任务名称',
-            prop: 'name',
+            prop: 'title',
             value: '',
             rules: {
               required: true,
@@ -107,7 +107,7 @@ export default {
           },
           {
             label: '服务路径',
-            prop: 'service',
+            prop: 'execute',
             value: '',
             rules: {
               required: true,
@@ -123,7 +123,7 @@ export default {
           },
           {
             label: '任务参数',
-            prop: 'data',
+            prop: 'params',
             value: '',
             component: {
               name: 'el-input',
@@ -134,7 +134,7 @@ export default {
           },
           {
             label: 'Cron',
-            prop: 'cron',
+            prop: 'rule',
             value: '',
             rules: {
               required: true,
@@ -150,7 +150,7 @@ export default {
           },
           {
             label: '开始日期',
-            prop: 'startTime',
+            prop: 'startAt',
             value: '',
             component: {
               name: 'el-date-picker',
@@ -167,7 +167,7 @@ export default {
           },
           {
             label: '结束日期',
-            prop: 'endTime',
+            prop: 'lastAt',
             value: '',
             component: {
               name: 'el-date-picker',
