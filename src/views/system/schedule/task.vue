@@ -218,16 +218,16 @@ export default {
       }
     },
     parseExecTime(row) {
-      if (!row.startTime && !row.endTime) {
+      if (!row.startAt && !row.lastAt) {
         return '无时段限制'
       }
-      if (!row.startTime && row.endTime) {
-        return `无开始时间限制 - ${row.endTime}`
+      if (!row.startAt && row.lastAt) {
+        return `无开始时间限制 - ${row.lastAt}`
       }
-      if (row.startTime && !row.endTime) {
-        return `${row.startTime} - 长期有效`
+      if (row.startAt && !row.lastAt) {
+        return `${row.startAt} - 长期有效`
       }
-      return `${row.startTime} - ${row.endTime}`
+      return `${row.startAt} - ${row.lastAt}`
     }
   }
 }
