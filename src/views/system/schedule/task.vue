@@ -22,22 +22,12 @@
               <el-form-item label="任务编号">
                 <span># {{ props.row.id }}</span>
               </el-form-item>
-              <el-form-item label="执行次数">
-                <span>{{
-                  props.row.limit > 0
-                    ? `仅 ${props.row.limit} 次`
-                    : '无次数限制'
-                }}</span>
-              </el-form-item>
-              <el-form-item v-if="props.row.type === 1" label="执行间隔">
-                <span>每 {{ props.row.every }} 毫秒执行一次</span>
-              </el-form-item>
-              <el-form-item v-else label="Cron表达式">
+              <el-form-item label="Cron表达式">
                 <el-tooltip content="秒 分 小时 日期 月份 星期 年(可选)">
-                  <span>{{ props.row.cron }}</span>
+                  <span>{{ props.row.rule }}</span>
                 </el-tooltip>
               </el-form-item>
-              <el-form-item v-if="props.row.type === 0" label="执行时间段">
+              <el-form-item label="执行时间段">
                 <span>{{ parseExecTime(props.row) }}</span>
               </el-form-item>
               <el-form-item label="执行操作">
@@ -93,13 +83,6 @@
               />
               <span class="tip">{{ getStatusInfo(scope.row.status) }}</span>
             </span>
-          </template>
-        </el-table-column>
-        <el-table-column prop="type" label="类型" width="100" align="center">
-          <template slot-scope="scope">
-            <el-tag type="small" effect="light">{{
-              scope.row.type === 1 ? 'Interval' : 'Cron'
-            }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column

@@ -64,3 +64,10 @@ export function stopTask(data) {
     data
   })
 }
+
+export function getNodeList() {
+  return request({
+    url: TaskApi.node,
+    method: 'get'
+  })
+}

@@ -1,41 +1,60 @@
 <template>
   <form-dialog ref="formDialog">
-    <template #slot-type="{ scope }">
-      <el-radio-group v-model="scope.type" @change="handleTaskTypeChange">
-        <el-radio :label="0">Cron</el-radio>
-        <el-radio :label="1">时间间隔</el-radio>
-      </el-radio-group>
-    </template>
     <template #slot-status="{ scope }">
       <el-radio-group v-model="scope.status">
         <el-radio :label="1">运行</el-radio>
         <el-radio :label="0">停止</el-radio>
       </el-radio-group>
     </template>
+    <template #slot-node="{ scope }">
+      <el-select v-model="scope.node.nodeId" placeholder="请选择" :style="{ width: '100%' }">
+        <el-option
+          v-for="item in scope.node.list"
+          :key="item.id"
+          :label="item.name"
+          :value="item.id"
+        />
+      </el-select>
+    </template>
   </form-dialog>
 </template>
 
 <script>
 import { isNumber } from 'lodash'
-import { getTaskInfo, createTask, updateTask } from '@/api/sys/task'
+import {
+  getTaskInfo,
+  createTask,
+  updateTask,
+  getNodeList
+} from '@/api/sys/task'
 
 export default {
   name: 'SystemScheduleTaskFormDialog',
   methods: {
-    async handleOpen(updateId, form, { showLoading, hideLoading, close, rebind }) {
-      if (updateId !== -1) {
-        try {
-          showLoading()
+    async handleOpen(updateId, form, { showLoading, hideLoading, close, rebind }
+    ) {
+      try {
+        showLoading()
+        const { data: nodeList } = await getNodeList()
+        if (updateId !== -1) {
           const { data } = await getTaskInfo({ id: updateId })
+          data.node = { list: nodeList, nodeId: data.nodeId }
           rebind(data)
-          hideLoading()
-        } catch {
-          close()
+        } else {
+          form.node.list = nodeList
         }
+        hideLoading()
+      } catch (e) {
+        close()
       }
     },
     handleSubmit(updateId, data, { close, done }) {
       let req = null
+
+      // 处理node
+      data.nodeId = data.node.nodeId
+      delete data.node
+
       if (updateId === -1) {
         // create
         req = createTask(data)
@@ -59,24 +78,17 @@ export default {
       this.$refs.formDialog.open({
         title: '编辑任务',
         dialogProps: {
-          top: '10vh'
+          top: '5vh'
         },
         on: {
-          open: (form, op) => { this.handleOpen(updateId, form, op) },
-          submit: (data, op) => { this.handleSubmit(updateId, data, op) }
+          open: (form, op) => {
+            this.handleOpen(updateId, form, op)
+          },
+          submit: (data, op) => {
+            this.handleSubmit(updateId, data, op)
+          }
         },
         items: [
-          {
-            label: '类型',
-            prop: 'type',
-            value: 0,
-            rules: {
-              required: true,
-              message: '请选择任务类型',
-              trigger: 'blur'
-            },
-            component: 'slot-type'
-          },
           {
             label: '任务名称',
             prop: 'name',
@@ -121,27 +133,9 @@ export default {
             }
           },
           {
-            label: '执行次数',
-            prop: 'limit',
-            value: -1,
-            component: {
-              name: 'el-input-number',
-              style: {
-                width: '100%'
-              },
-              props: {
-                'controls-position': 'right',
-                min: -1
-              }
-            }
-          },
-          {
             label: 'Cron',
             prop: 'cron',
             value: '',
-            hidden: ({ scope }) => {
-              return scope.type === 1
-            },
             rules: {
               required: true,
               message: '请输入Cron表达式',
@@ -155,35 +149,9 @@ export default {
             }
           },
           {
-            label: '执行间隔',
-            prop: 'every',
-            value: 60000,
-            rules: {
-              required: true,
-              message: '请输入Cron表达式',
-              trigger: 'blur'
-            },
-            hidden: ({ scope }) => {
-              return scope.type === 0
-            },
-            component: {
-              name: 'el-input-number',
-              style: {
-                width: '100%'
-              },
-              props: {
-                'controls-position': 'right',
-                min: 0
-              }
-            }
-          },
-          {
             label: '开始日期',
             prop: 'startTime',
             value: '',
-            hidden: ({ scope }) => {
-              return scope.type === 1
-            },
             component: {
               name: 'el-date-picker',
               props: {
@@ -201,9 +169,6 @@ export default {
             label: '结束日期',
             prop: 'endTime',
             value: '',
-            hidden: ({ scope }) => {
-              return scope.type === 1
-            },
             component: {
               name: 'el-date-picker',
               props: {
@@ -216,6 +181,39 @@ export default {
                 placeholder: '请选择结束日期'
               }
             }
+          },
+          {
+            label: '单例',
+            prop: 'singleton',
+            value: true,
+            component: {
+              name: 'el-switch'
+            }
+          },
+          {
+            label: '单节点',
+            prop: 'onOneServer',
+            value: true,
+            component: {
+              name: 'el-switch'
+            }
+          },
+          {
+            label: '执行节点',
+            prop: 'node',
+            rules: {
+              required: true,
+              trigger: 'blur',
+              validator: (rule, value, callback) => {
+                if (!value.nodeId || !isNumber(value.nodeId)) {
+                  callback(new Error('请选择执行节点'))
+                } else {
+                  callback()
+                }
+              }
+            },
+            value: { list: [], nodeId: null },
+            component: 'slot-node'
           },
           {
             label: '备注',
@@ -237,11 +235,6 @@ export default {
           }
         ]
       })
-    },
-    handleTaskTypeChange() {
-      if (this.$refs.formDialog) {
-        this.$refs.formDialog.clearValidate()
-      }
     }
   }
 }
