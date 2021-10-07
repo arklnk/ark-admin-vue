@@ -6,5 +6,6 @@ export default {
   once: 'sys/task/once',
   start: 'sys/task/start',
   stop: 'sys/task/stop',
-  info: 'sys/task/info'
+  info: 'sys/task/info',
+  node: 'sys/task/node'
 }
