@@ -1,6 +1,6 @@
 module.exports = {
 
-  title: 'ark-admin通用管理后台',
+  title: 'ARK-ADMIN通用管理后台',
 
   dashboardName: '工作台',
 
