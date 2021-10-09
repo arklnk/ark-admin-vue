@@ -124,11 +124,11 @@ export default {
           {
             label: '任务参数',
             prop: 'params',
-            value: '',
+            value: '[]',
             component: {
               name: 'el-input',
               attrs: {
-                placeholder: '请输入任务参数（可不填）'
+                placeholder: '没有参数时默认为[]'
               }
             }
           },
