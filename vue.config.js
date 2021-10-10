@@ -7,19 +7,19 @@ const defaultSettings = require('./src/config/settings.js')
 const { dependencies, devDependencies, version } = require('./package')
 
 // app name
-const name = defaultSettings.title || 'SF Admin Template' // page title
+const name = defaultSettings.title || 'ARK Admin Template' // page title
 
 function resolve(dir) {
   return path.join(__dirname, dir)
 }
 
 // inject info
-const __SFADMIN_INFO__ = {
+const __ARKADMIN_INFO__ = {
   pkg: { dependencies, devDependencies, version, name },
   lastBuildTime: formatDate(new Date(), 'yyyy-MM-dd HH:mm:ss')
 }
 
-process.env.VUE_APP_SFADMIN_INFO = JSON.stringify(__SFADMIN_INFO__)
+process.env.VUE_APP_ARKADMIN_INFO__ = JSON.stringify(__ARKADMIN_INFO__)
 
 // If your port is set to 80,
 // use administrator privileges to execute the command line.

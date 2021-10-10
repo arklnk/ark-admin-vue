@@ -4,7 +4,7 @@
       <div class="title">
         <b>关于</b>
       </div>
-      <code>sf-nest-admin</code>或<code>sf-midway-admin</code>的前端项目是基于<code>vue-admin-template</code>开发，
+      <code>ark-admin</code>的前端项目是基于<code>vue-admin-template</code>开发，
       内置了动态路由、权限验证、并提供了常用的功能组件，帮助你快速搭建企业级中后台产品原型。
       原则上不会限制任何代码用于商用。
     </div>
@@ -29,20 +29,13 @@
           <template slot="label">
             文档地址
           </template>
-          <el-link href="https://blog.si-yee.com/sf-admin-cli" target="_blank" :underline="false">文档地址</el-link>
+          <el-link href="https://docs.arklink.cn" target="_blank" :underline="false">文档地址</el-link>
         </el-descriptions-item>
         <el-descriptions-item>
           <template slot="label">
             预览地址
           </template>
-          <el-link href="http://opensource.admin.si-yee.com/" target="_blank" :underline="false">预览地址</el-link>
-        </el-descriptions-item>
-        <el-descriptions-item>
-          <template slot="label">
-            Github
-          </template>
-          <el-link href="https://github.com/hackycy/sf-nest-admin" target="_blank" :underline="false">Nest版</el-link> 、
-          <el-link href="https://github.com/hackycy/sf-midway-admin" target="_blank" :underline="false">Midway版</el-link>
+          <el-link href="" target="_blank" :underline="false">预览地址</el-link>
         </el-descriptions-item>
       </el-descriptions>
     </el-card>
@@ -80,7 +73,7 @@ export default {
   name: 'AccountSettings',
   data() {
     return {
-      info: Object.freeze(JSON.parse(process.env.VUE_APP_SFADMIN_INFO))
+      info: Object.freeze(JSON.parse(process.env.VUE_APP_ARKADMIN_INFO__))
     }
   }
 }
