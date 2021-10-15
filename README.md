@@ -1,3 +1,1 @@
-# Hyperf-Admin
-
-Hyperf-Admin通用性管理后台（前端）
+详细开发文档：[https://docs.arklnk.com/admin](https://docs.arklnk.com/admin)
