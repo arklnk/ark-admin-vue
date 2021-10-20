@@ -21,12 +21,6 @@
 
 <script>
 import { isNumber } from 'lodash'
-import {
-  getTaskInfo,
-  createTask,
-  updateTask,
-  getNodeList
-} from '@/api/sys/task'
 
 export default {
   name: 'SystemScheduleTaskFormDialog',
@@ -35,9 +29,9 @@ export default {
     ) {
       try {
         showLoading()
-        const { data: nodeList } = await getNodeList()
+        const { data: nodeList } = await this.$api.sys.task.node()
         if (updateId !== -1) {
-          const { data } = await getTaskInfo({ id: updateId })
+          const { data } = await this.$api.sys.task.info({ id: updateId })
           data.node = { list: nodeList, nodeId: data.nodeId }
           rebind(data)
         } else {
@@ -57,10 +51,10 @@ export default {
 
       if (updateId === -1) {
         // create
-        req = createTask(data)
+        req = this.$api.sys.task.add(data)
       } else {
         data.id = updateId
-        req = updateTask(data)
+        req = this.$api.sys.task.update(data)
       }
       req
         .then(_ => {
